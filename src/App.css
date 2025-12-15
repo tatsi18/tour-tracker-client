@@ -1,0 +1,51 @@
+/* client/src/App.css */
+
+/* 1. TAILWIND CSS DIRECTIVES (ESSENTIAL) */
+/* These lines must be at the very top for Tailwind to work */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 2. GLOBAL STYLES & RESETS */
+/* Ensure the application takes up the full viewport height */
+#root,
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 3. FULLCALENDAR OVERRIDES */
+/* Adjust the calendar colors and font sizes for a cleaner look */
+.fc .fc-daygrid-day-number {
+  padding: 4px;
+  font-weight: 500;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Style for individual events on the calendar */
+.fc-event {
+  border-radius: 4px !important;
+  padding: 2px 4px !important;
+  font-size: 0.75rem !important; /* text-xs */
+  line-height: 1.2 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 4. CUSTOM COMPONENTS (For the Agency form color picker) */
+.color-swatch {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  margin-right: 8px;
+  cursor: pointer;
+}

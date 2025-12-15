@@ -1,0 +1,62 @@
+/* SettingsPage.css */
+
+.columns-container {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  flex-wrap: wrap; /* allows wrapping on smaller screens */
+}
+
+.columns-container section {
+  flex: 1 1 30%; /* grow, shrink, base 30% width */
+  min-width: 250px; /* prevents columns from getting too narrow */
+}
+
+.card {
+  background-color: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #000;
+}
+
+.button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+  border: none;
+  color: white;
+}
+
+.button-edit {
+  background-color: #fbbf24;
+}
+.button-delete {
+  background-color: #dc2626;
+}
+.button-add {
+  background-color: #16a34a;
+}
+
+h1,
+h2 {
+  margin-bottom: 12px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 900px) {
+  .columns-container section {
+    flex: 1 1 45%; /* two columns on medium screens */
+  }
+}
+
+@media (max-width: 600px) {
+  .columns-container {
+    flex-direction: column; /* single column on small screens */
+  }
+  .columns-container section {
+    flex: 1 1 100%;
+  }
+}
