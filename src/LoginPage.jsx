@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, onForgotPassword }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -182,6 +182,24 @@ export default function LoginPage({ onLoginSuccess }) {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
+          {/* Forgot password link */}
+          <div style={{ marginTop: "15px", textAlign: "center" }}>
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#667eea",
+                fontSize: "14px",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Forgot password?
+            </button>
+          </div>
         </form>
 
         <div
