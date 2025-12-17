@@ -5,6 +5,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
 import "@fullcalendar/common/main.css";
+import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
@@ -35,47 +36,63 @@ export default function CalendarPage() {
   }, []);
 
   const fetchTours = () => {
-    fetch(`${API}/events`)
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((tour) => ({
-          id: tour.id,
-          title: tour.title,
-          start: tour.start,
-          end: tour.end,
-          backgroundColor: tour.backgroundColor || "#3788d8",
-          borderColor: tour.backgroundColor || "#3788d8",
-          extendedProps: {
-            agency: tour.agency,
-            cruiseShip: tour.cruiseShip,
-            description: tour.description,
-            tourType: tour.tourType,
-            tipEUR: tour.tipEUR,
-            tipUSD: tour.tipUSD,
-            agencyId: tour.agencyId,
-            templateId: tour.templateId,
-            shipId: tour.shipId,
-          },
-        }));
+    axios
+      .get(`${API}/events`)
+      .then((res) => {
+        console.log("Raw tour data:", res.data);
+
+        const formatted = res.data.map((tour) => {
+          let startDate = tour.start;
+          let endDate = tour.end;
+
+          if (typeof startDate === "string") {
+            startDate = new Date(startDate);
+          }
+          if (typeof endDate === "string") {
+            endDate = new Date(endDate);
+          }
+
+          return {
+            id: tour.id,
+            title: tour.title,
+            start: startDate,
+            end: endDate,
+            backgroundColor: tour.backgroundColor || "#3788d8",
+            borderColor: tour.borderColor || "#3788d8",
+            extendedProps: {
+              agency: tour.agency,
+              cruiseShip: tour.cruiseShip,
+              description: tour.description,
+              tourType: tour.tourType,
+              tipEUR: tour.tipEUR,
+              tipUSD: tour.tipUSD,
+              agencyId: tour.agencyId,
+              templateId: tour.templateId,
+              shipId: tour.shipId,
+            },
+          };
+        });
+
+        console.log("Formatted events:", formatted);
         setEvents(formatted);
       })
       .catch((err) => console.error("Error fetching tours:", err));
   };
 
   const fetchDropdownOptions = () => {
-    fetch(`${API}/templates`)
-      .then((res) => res.json())
-      .then(setTemplates)
+    axios
+      .get(`${API}/templates`)
+      .then((res) => setTemplates(res.data))
       .catch((err) => console.error("Error fetching templates:", err));
 
-    fetch(`${API}/agencies`)
-      .then((res) => res.json())
-      .then(setAgencies)
+    axios
+      .get(`${API}/agencies`)
+      .then((res) => setAgencies(res.data))
       .catch((err) => console.error("Error fetching agencies:", err));
 
-    fetch(`${API}/ships`)
-      .then((res) => res.json())
-      .then(setCruiseShips)
+    axios
+      .get(`${API}/ships`)
+      .then((res) => setCruiseShips(res.data))
       .catch((err) => console.error("Error fetching ships:", err));
   };
 
@@ -107,22 +124,11 @@ export default function CalendarPage() {
       tip_usd: formData.tipUSD ? parseFloat(formData.tipUSD) : null,
     };
 
-    const method = editingTour ? "PUT" : "POST";
-    const url = editingTour ? `${API}/events/${editingTour}` : `${API}/events`;
+    const request = editingTour
+      ? axios.put(`${API}/events/${editingTour}`, tourData)
+      : axios.post(`${API}/events`, tourData);
 
-    fetch(url, {
-      method: method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(tourData),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((err) => {
-            throw new Error(err.error || "Failed to save tour");
-          });
-        }
-        return res.json();
-      })
+    request
       .then(() => {
         fetchTours();
         setFormData({
@@ -141,7 +147,9 @@ export default function CalendarPage() {
       })
       .catch((err) => {
         console.error("Error saving tour:", err);
-        alert(`Failed to save tour: ${err.message}`);
+        alert(
+          `Failed to save tour: ${err.response?.data?.error || err.message}`
+        );
       });
   };
 
@@ -155,8 +163,17 @@ export default function CalendarPage() {
 
   const handleEditTour = () => {
     const event = selectedEvent;
-    const startDate = new Date(event.start);
-    const endDate = event.end ? new Date(event.end) : new Date(event.start);
+
+    // Handle both Date objects and string dates
+    let startDate = event.start;
+    let endDate = event.end || event.start;
+
+    if (typeof startDate === "string") {
+      startDate = new Date(startDate);
+    }
+    if (typeof endDate === "string") {
+      endDate = new Date(endDate);
+    }
 
     const dateStr = startDate.toISOString().split("T")[0];
     const startTimeStr = startDate.toTimeString().slice(0, 5);
@@ -187,9 +204,8 @@ export default function CalendarPage() {
         `Are you sure you want to delete "${selectedEvent.title}"?`
       )
     ) {
-      fetch(`${API}/events/${selectedEvent.id}`, {
-        method: "DELETE",
-      })
+      axios
+        .delete(`${API}/events/${selectedEvent.id}`)
         .then(() => {
           fetchTours();
           closeModal();
