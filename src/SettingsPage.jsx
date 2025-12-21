@@ -6,7 +6,10 @@ import AgencyForm from "./AgencyForm";
 import TourTemplateForm from "./TourTemplateForm";
 import CruiseShipForm from "./CruiseShipForm";
 import "./SettingsPage.css";
+import NotificationSettings from './components/NotificationSettings';
+
 const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
 const SettingsPage = () => {
   const [agencies, setAgencies] = useState([]);
   const [tourTypes, setTourTypes] = useState([]);
@@ -21,15 +24,21 @@ const SettingsPage = () => {
   const [showShipForm, setShowShipForm] = useState(false);
   const [editingShip, setEditingShip] = useState(null);
 
+  // Get token from localStorage
+  const token = localStorage.getItem('token');
+
   const fetchSettingsData = useCallback(async () => {
     try {
-      const agencyRes = await axios.get(`${API}/agencies`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const agencyRes = await axios.get(`${API}/agencies`, { headers });
       setAgencies(agencyRes.data);
 
-      const typeRes = await axios.get(`${API}/tourtypes`);
+      const typeRes = await axios.get(`${API}/tourtypes`, { headers });
       setTourTypes(typeRes.data);
 
-      const shipRes = await axios.get(`${API}/cruiseships`);
+      const shipRes = await axios.get(`${API}/cruiseships`, { headers });
       setCruiseShips(shipRes.data);
     } catch (err) {
       console.error(err);
@@ -55,7 +64,9 @@ const SettingsPage = () => {
   const handleDelete = async (url, id, name) => {
     if (!window.confirm(`Delete "${name}"?`)) return;
     try {
-      await axios.delete(`${url}/${id}`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.delete(`${url}/${id}`, { headers });
       toast.success(`${name} deleted`);
       fetchSettingsData();
     } catch (err) {
@@ -239,6 +250,11 @@ const SettingsPage = () => {
       >
         ⚙️ System Settings
       </h1>
+
+      {/* Notification Settings Section */}
+      <section style={{ marginBottom: "32px" }}>
+        <NotificationSettings token={token} />
+      </section>
 
       {/* Forms as modals/overlays */}
       {showAgencyForm && (

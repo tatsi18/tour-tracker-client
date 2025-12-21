@@ -1,0 +1,219 @@
+// src/components/NotificationSettings.jsx
+import React from "react";
+import { useNotifications } from "../hooks/useNotifications";
+
+export default function NotificationSettings({ token }) {
+  const {
+    notificationPermission,
+    isSubscribed,
+    loading,
+    subscribeToNotifications,
+    unsubscribeFromNotifications,
+    sendTestNotification,
+  } = useNotifications(token);
+
+  const handleSubscribe = async () => {
+    const success = await subscribeToNotifications();
+    if (success) {
+      alert(
+        "Successfully subscribed to notifications! You will receive alerts 90 and 60 minutes before your tours."
+      );
+    } else {
+      alert(
+        "Failed to subscribe to notifications. Please check your browser settings."
+      );
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    const success = await unsubscribeFromNotifications();
+    if (success) {
+      alert("Successfully unsubscribed from notifications.");
+    }
+  };
+
+  const handleTest = async () => {
+    const success = await sendTestNotification();
+    if (success) {
+      alert("Test notification sent! Check your notifications.");
+    } else {
+      alert("Failed to send test notification.");
+    }
+  };
+
+  // Check if notifications are supported
+  if (!("Notification" in window)) {
+    return (
+      <div
+        style={{
+          padding: "20px",
+          backgroundColor: "#fff3cd",
+          borderRadius: "8px",
+        }}
+      >
+        <h3 style={{ margin: "0 0 10px 0" }}>⚠️ Notifications Not Supported</h3>
+        <p style={{ margin: 0 }}>
+          Your browser doesn't support push notifications. Please use a modern
+          browser like Chrome, Firefox, or Edge.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        padding: "20px",
+        backgroundColor: "white",
+        borderRadius: "8px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h3 style={{ margin: "0 0 15px 0", fontSize: "20px" }}>
+        🔔 Tour Notifications
+      </h3>
+
+      <div style={{ marginBottom: "20px" }}>
+        <p style={{ color: "#666", fontSize: "14px", marginBottom: "10px" }}>
+          Get notified <strong>90 minutes</strong> and{" "}
+          <strong>60 minutes</strong> before your tours start!
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            marginBottom: "15px",
+          }}
+        >
+          <div
+            style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              backgroundColor:
+                notificationPermission === "granted"
+                  ? "#22c55e"
+                  : notificationPermission === "denied"
+                  ? "#ef4444"
+                  : "#fbbf24",
+            }}
+          />
+          <span style={{ fontSize: "14px", color: "#666" }}>
+            Permission: <strong>{notificationPermission}</strong>
+          </span>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            marginBottom: "15px",
+          }}
+        >
+          <div
+            style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              backgroundColor: isSubscribed ? "#22c55e" : "#9ca3af",
+            }}
+          />
+          <span style={{ fontSize: "14px", color: "#666" }}>
+            Status:{" "}
+            <strong>{isSubscribed ? "Subscribed" : "Not Subscribed"}</strong>
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        {!isSubscribed ? (
+          <button
+            onClick={handleSubscribe}
+            disabled={loading}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: loading ? "#9ca3af" : "#667eea",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: "600",
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? "Subscribing..." : "🔔 Enable Notifications"}
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={handleUnsubscribe}
+              disabled={loading}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: loading ? "#9ca3af" : "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: loading ? "not-allowed" : "pointer",
+              }}
+            >
+              {loading ? "Unsubscribing..." : "🔕 Disable Notifications"}
+            </button>
+            <button
+              onClick={handleTest}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#10b981",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              📨 Send Test
+            </button>
+          </>
+        )}
+      </div>
+
+      {notificationPermission === "denied" && (
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "12px",
+            backgroundColor: "#fee2e2",
+            borderRadius: "6px",
+            fontSize: "14px",
+            color: "#991b1b",
+          }}
+        >
+          ⚠️ Notifications are blocked. Please enable them in your browser
+          settings.
+        </div>
+      )}
+
+      {isSubscribed && (
+        <div
+          style={{
+            marginTop: "15px",
+            padding: "12px",
+            backgroundColor: "#d1fae5",
+            borderRadius: "6px",
+            fontSize: "14px",
+            color: "#065f46",
+          }}
+        >
+          ✅ You're all set! You'll receive notifications at 90 and 60 minutes
+          before each tour.
+        </div>
+      )}
+    </div>
+  );
+}
