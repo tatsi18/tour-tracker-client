@@ -1,13 +1,66 @@
-
 // src/components/NotificationSettings.jsx
-import React from "react";
-import { useNotifications } from "../hooks/useNotifications";
+import React, { useState, useEffect } from "react";
 
 export default function NotificationSettings({ token }) {
-  // Safe check for Notification API
-  const notificationSupported =
-    typeof window !== "undefined" && "Notification" in window;
+  const [hookLoaded, setHookLoaded] = useState(false);
+  const [NotificationHook, setNotificationHook] = useState(null);
 
+  // Safe check for Notification API
+  const notificationSupported = typeof window !== 'undefined' && 'Notification' in window;
+
+  useEffect(() => {
+    // Only load the hook if notifications are supported
+    if (notificationSupported) {
+      import('../hooks/useNotifications').then(module => {
+        setNotificationHook(() => module.useNotifications);
+        setHookLoaded(true);
+      });
+    } else {
+      setHookLoaded(true);
+    }
+  }, [notificationSupported]);
+
+  // Show loading while checking
+  if (!hookLoaded) {
+    return (
+      <div
+        style={{
+          padding: "20px",
+          backgroundColor: "white",
+          borderRadius: "8px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        }}
+      >
+        <p>Loading notification settings...</p>
+      </div>
+    );
+  }
+
+  // Check if notifications are supported
+  if (!notificationSupported) {
+    return (
+      <div
+        style={{
+          padding: "20px",
+          backgroundColor: "#fff3cd",
+          borderRadius: "8px",
+          border: "1px solid #ffc107",
+        }}
+      >
+        <h3 style={{ margin: "0 0 10px 0" }}>⚠️ Notifications Not Supported</h3>
+        <p style={{ margin: 0 }}>
+          Push notifications are not supported on iOS devices. This feature works on desktop browsers and Android devices.
+        </p>
+      </div>
+    );
+  }
+
+  // If we get here, notifications are supported and hook is loaded
+  return <NotificationSettingsWithHook token={token} useNotifications={NotificationHook} />;
+}
+
+// Separate component that uses the hook
+function NotificationSettingsWithHook({ token, useNotifications }) {
   const {
     notificationPermission,
     isSubscribed,
@@ -45,25 +98,6 @@ export default function NotificationSettings({ token }) {
       alert("Failed to send test notification.");
     }
   };
-
-  // Check if notifications are supported
-  if (!notificationSupported) {
-    return (
-      <div
-        style={{
-          padding: "20px",
-          backgroundColor: "#fff3cd",
-          borderRadius: "8px",
-        }}
-      >
-        <h3 style={{ margin: "0 0 10px 0" }}>⚠️ Notifications Not Supported</h3>
-        <p style={{ margin: 0 }}>
-          Push notifications are not supported on iOS devices. This feature
-          works on desktop browsers and Android devices.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div
