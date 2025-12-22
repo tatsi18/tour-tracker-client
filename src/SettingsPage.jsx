@@ -8,6 +8,38 @@ import CruiseShipForm from "./CruiseShipForm";
 import "./SettingsPage.css";
 import NotificationSettings from './components/NotificationSettings';
 
+// Add after imports, before SettingsPage component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Settings page error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '20px', backgroundColor: 'white', margin: '20px' }}>
+          <h2>Settings Page Error</h2>
+          <pre style={{ color: 'red', whiteSpace: 'pre-wrap' }}>
+            {this.state.error?.toString()}
+          </pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+
+
 const API = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 const SettingsPage = () => {
@@ -479,4 +511,13 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+// Wrap with error boundary
+function SettingsPageWithErrorBoundary(props) {
+  return (
+    <ErrorBoundary>
+      <SettingsPage {...props} />
+    </ErrorBoundary>
+  );
+}
+
+export default SettingsPageWithErrorBoundary;
