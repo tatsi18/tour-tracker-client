@@ -1,3 +1,14 @@
+export default function NotificationSettings({ token }) {
+  console.log('NotificationSettings rendering');
+  console.log('Window exists:', typeof window !== 'undefined');
+  console.log('Notification in window:', typeof window !== 'undefined' && 'Notification' in window);
+  
+  try {
+
+
+
+
+
 // src/components/NotificationSettings.jsx
 import React from "react";
 import { useNotifications } from "../hooks/useNotifications";
