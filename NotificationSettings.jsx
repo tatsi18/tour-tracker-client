@@ -2,11 +2,16 @@
 import React from "react";
 import { useNotifications } from "../hooks/useNotifications";
 
-export default function NotificationSettings({ token }) {
-  // Check if notifications are supported
-  const notificationSupported = typeof window !== 'undefined' && 
-                                 typeof Notification !== 'undefined';
+// Safe check at module level
+let NOTIFICATION_SUPPORTED = false;
+try {
+  NOTIFICATION_SUPPORTED = typeof window !== 'undefined' && 
+                           typeof window.Notification !== 'undefined';
+} catch (e) {
+  NOTIFICATION_SUPPORTED = false;
+}
 
+export default function NotificationSettings({ token }) {
   const {
     notificationPermission,
     isSubscribed,
@@ -46,7 +51,7 @@ export default function NotificationSettings({ token }) {
   };
 
   // If notifications not supported, show warning
-  if (!notificationSupported) {
+  if (!NOTIFICATION_SUPPORTED) {
     return (
       <div
         style={{
