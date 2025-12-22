@@ -4,20 +4,36 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+// Safe check at module level with try-catch
+let HAS_NOTIFICATION_SUPPORT = false;
+try {
+  HAS_NOTIFICATION_SUPPORT = typeof window !== 'undefined' && 
+                             typeof window.Notification !== 'undefined';
+} catch (e) {
+  HAS_NOTIFICATION_SUPPORT = false;
+}
+
 export function useNotifications(token) {
-  const [notificationPermission, setNotificationPermission] = useState(
-    Notification.permission
-  );
+  const [notificationPermission, setNotificationPermission] = useState(() => {
+    if (!HAS_NOTIFICATION_SUPPORT) return 'unsupported';
+    try {
+      return window.Notification.permission;
+    } catch (e) {
+      return 'unsupported';
+    }
+  });
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator && token) {
+    if ('serviceWorker' in navigator && token && HAS_NOTIFICATION_SUPPORT) {
       checkSubscription();
     }
   }, [token]);
 
   const checkSubscription = async () => {
+    if (!HAS_NOTIFICATION_SUPPORT) return;
+    
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
@@ -43,8 +59,10 @@ export function useNotifications(token) {
   };
 
   const requestNotificationPermission = async () => {
+    if (!HAS_NOTIFICATION_SUPPORT) return false;
+    
     try {
-      const permission = await Notification.requestPermission();
+      const permission = await window.Notification.requestPermission();
       setNotificationPermission(permission);
       return permission === 'granted';
     } catch (error) {
@@ -69,9 +87,13 @@ export function useNotifications(token) {
   };
 
   const subscribeToNotifications = async () => {
+    if (!HAS_NOTIFICATION_SUPPORT) {
+      alert('Notifications are not supported on this device');
+      return false;
+    }
+
     setLoading(true);
     try {
-      // Request permission
       const hasPermission = await requestNotificationPermission();
       if (!hasPermission) {
         alert('Please enable notifications in your browser settings');
@@ -79,21 +101,17 @@ export function useNotifications(token) {
         return false;
       }
 
-      // Register service worker
       const registration = await registerServiceWorker();
 
-      // Get VAPID public key from server
       const { data: { publicKey } } = await axios.get(
         `${API}/notifications/vapid-public-key`
       );
 
-      // Subscribe to push notifications
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
 
-      // Send subscription to server
       await axios.post(
         `${API}/notifications/subscribe`,
         {
@@ -131,6 +149,8 @@ export function useNotifications(token) {
   };
 
   const unsubscribeFromNotifications = async () => {
+    if (!HAS_NOTIFICATION_SUPPORT) return false;
+
     setLoading(true);
     try {
       const registration = await navigator.serviceWorker.ready;
